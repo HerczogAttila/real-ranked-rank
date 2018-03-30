@@ -1,4 +1,77 @@
 
+.App {
+  display: flex;
+  justify-content: center;
+  flex-flow: column;
+}
+
+.search {
+  height: stretch;
+}
+
+.search-container {
+  align-self: center;
+}
+
+.search-button {
+  margin-left: 1rem;
+}
+
+.result-container {
+  display: flex;
+  margin-top: 1rem;
+  align-self: center;
+}
+
+.profile-icon-container {
+  margin-right: 2rem;
+}
+
+.profile-icon {
+  width: 128px;
+  height: 128px;
+}
+
+.league-data-container {
+  margin-right: 2rem;
+}
+
 span {
   display: block;
+}
+
+table {
+  margin-top: 1rem;
+  border-collapse: collapse;
+}
+
+th {
+  width: 5rem;
+  border: 1px solid black;
+}
+
+.summoner-name {
+  width: 15rem;
+}
+
+td {
+  text-align: center;
+  border: 1px solid black;
+}
+
+tr {
+  border: 1px solid black;
+}
+
+.summoner {
+  background-color: #dddddd;
+}
+
+.message-container {
+  margin-top: 1rem;
+  align-self: center;
+}
+
+h1 {
+  align-self: center;
 }

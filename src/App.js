@@ -6,8 +6,10 @@ import './App.css';
 
 class App extends ReactQueryParams {
   state = {
-    name: this.queryParams.name,
-    data: null
+    name: this.queryParams.name ? this.queryParams.name : '',
+    data: null,
+    range: 11,
+    cheat: false
   }
 
   componentDidMount() {
@@ -21,7 +23,20 @@ class App extends ReactQueryParams {
     const url = '/data?summonerName=' + name;
     axios.get(url)
       .then(response => {
-        this.setState({ data: response.data });
+        const data = response.data;
+        let cheat = false;
+        if (data.challengerleagues && data.challengerleagues.entries) {
+          data.challengerleagues.entries = data.challengerleagues.entries.sort((a, b) => b.leaguePoints - a.leaguePoints);
+          const maxLeaguePoints = Math.max.apply(null, data.challengerleagues.entries.map(entry => entry.leaguePoints));
+          if (data.account.league) {
+            const league = data.account.league.find(s => s.queueType === 'RANKED_SOLO_5x5');
+            if (league && !data.challengerleagues.entries.find(item => item.playerOrTeamName === data.account.summoner.name)) {
+              cheat = true;
+              data.challengerleagues.entries.unshift({ playerOrTeamId: data.account.summoner.id, playerOrTeamName: data.account.summoner.name, leaguePoints: maxLeaguePoints * 2, wins: league.wins, losses: league.losses });
+            }
+          }
+        }
+        this.setState({ data, cheat });
       }).catch(error => console.log(error));
   };
 
@@ -29,79 +44,103 @@ class App extends ReactQueryParams {
     this.setState({ name: event.target.value });
   };
 
-  render() {    
-    let summonerData = null;
-    let leagueData = null;
-    let challengerleaguesData = null;
+  inputSearchHandler = (event) => {
+    if (event.key === 'Enter') {
+      this.searchHandler();
+    }
+  };
+
+  render() {
+    let appClass = 'App';
+    let results = null;
+    let message = null;
     if (this.state.data) {
+      let personalData = null;
+      let challengerleaguesData = null;
       if (this.state.data.challengerleagues && this.state.data.challengerleagues.entries) {
-        let entries = this.state.data.challengerleagues.entries.sort((a, b) => b.leaguePoints - a.leaguePoints);
+        const summoner = this.state.data.challengerleagues.entries.find(item => item.playerOrTeamName === this.state.data.account.summoner.name);
+        const index = this.state.data.challengerleagues.entries.indexOf(summoner);
+        const min = index >= 4 ? index - 5 : 0;
+        let entries = this.state.data.challengerleagues.entries.slice(min, min + this.state.range);
+        personalData = <div className='league-data-container'>
+          <span>Name: {this.state.data.account.summoner.name}</span>
+          <span>Level: {this.state.data.account.summoner.summonerLevel}</span>
+          <span>League: UNRANKED</span>
+        </div>;
         if (this.state.data.account.league) {
           const league = this.state.data.account.league.find(s => s.queueType === 'RANKED_SOLO_5x5');
           if (league) {
-            leagueData = <div>
-              <span>Name: {league.leagueName}</span>
-              <span>Point: {league.leaguePoints}</span>
-              <span>Wins: {league.wins}</span>
-              <span>Losses: {league.losses}</span>
-              <span>Tier: {league.tier}</span>
-              <span>Rank: {league.rank}</span>
+            personalData = <div className='league-data-container'>
+              <span>Név: {this.state.data.account.summoner.name}</span>
+              <span>Szint: {this.state.data.account.summoner.summonerLevel}</span>
+              <span>Liga: {league.tier} {league.rank} ({league.leagueName})</span>
+              <span>Pont: {league.leaguePoints}</span>
+              <span>Győzelmek: {league.wins}</span>
+              <span>Vereségek: {league.losses}</span>
             </div>;
 
-            const maxLeaguePoints = Math.max.apply(null, entries.map(entry => entry.leaguePoints));
-
-            entries.unshift({ playerOrTeamId: this.state.data.account.summoner.id, playerOrTeamName: this.state.data.account.summoner.name, leaguePoints: maxLeaguePoints * 2, wins: league.wins, losses: league.losses });
-
-          } else {
-            leagueData = <div>Unranked</div>
-          }
-        } else {
-          leagueData = <div>Unranked</div>
-        }
-
-        const entriesData = entries.map(entry => (
-          <tr key={entry.playerOrTeamId}>
-            <td>{entry.playerOrTeamName}</td>
-            <td>{entry.leaguePoints}</td>
-            <td>{entry.wins}</td>
-            <td>{entry.losses}</td>
-          </tr>
-        ));
-        challengerleaguesData = <div>
-          <span>Name: {this.state.data.challengerleagues.name}</span>
-          <span>Tier: {this.state.data.challengerleagues.tier}</span>
-          <table>
-            <thead>
-              <tr>
-                <th>Name</th>
-                <th>LP</th>
-                <th>Wins</th>
-                <th>Losses</th>
+            const entriesData = entries.map((entry, index) => (
+              <tr key={entry.playerOrTeamId} className={entry.playerOrTeamName === this.state.data.account.summoner.name ? 'summoner' : ''}>
+                <td>{index + min + 1}</td>
+                <td className='summoner-name'>{entry.playerOrTeamName}</td>
+                <td>{entry.leaguePoints}</td>
+                <td>{entry.wins}</td>
+                <td>{entry.losses}</td>
               </tr>
-            </thead>
-            <tbody>
-              {entriesData}
-            </tbody>
-          </table>
+            ));
+            challengerleaguesData = <div>
+              <span>Valós liga: {this.state.data.challengerleagues.tier}</span>
+              <table>
+                <thead>
+                  <tr>
+                    <th>Helyezés</th>
+                    <th>Név</th>
+                    <th>LP</th>
+                    <th>Győzelmek</th>
+                    <th>Vereségek</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {entriesData}
+                </tbody>
+              </table>
+            </div>;
+          }
+        }
+      }
+
+      let profileIcon = null;
+      if (this.state.data.account && this.state.data.account.summoner) {
+        profileIcon = <div className='profile-icon-container'>
+          <img className='profile-icon' alt='' src={'http://ddragon.leagueoflegends.com/cdn/8.4.1/img/profileicon/' + this.state.data.account.summoner.profileIconId + '.png'} />
         </div>;
       }
 
-      if (this.state.data.account && this.state.data.account.summoner) {
-        summonerData = <div>
-          <img alt='' src={'http://ddragon.leagueoflegends.com/cdn/8.4.1/img/profileicon/' + this.state.data.account.summoner.profileIconId + '.png'} />;
-        <span>Name: {this.state.data.account.summoner.name}</span>
-          <span>Level: {this.state.data.account.summoner.summonerLevel}</span>
+      if (this.state.cheat && challengerleaguesData) {
+        message = <div className='message-container'>
+          <span>Remélem elégedett vagy a valós helyezéseddel!</span>
+          <span>Ne felejtsd el megnézni a dátumot!</span>
         </div>;
       }
+
+      results = <div className="result-container">
+        {profileIcon}
+        {personalData}
+        {challengerleaguesData}
+      </div>;
+    } else {
+      appClass += ' search';
     }
 
     return (
-      <div className="App">
-        <input type="text" value={this.state.name} onChange={(event) => this.nameChangedHandler(event)} />
-        <button onClick={this.searchHandler}>Search</button>
-        {summonerData}
-        {leagueData}
-        {challengerleaguesData}
+      <div className={appClass}>
+        <h1>EUNE Valós Rangsorolt Helyezés</h1>
+        <div className="search-container">
+          <input placeholder="Idéző név" type="text" onKeyUp={this.inputSearchHandler} value={this.state.name} onChange={this.nameChangedHandler} />
+          <button className="search-button" onClick={this.searchHandler}>Keresés</button>
+        </div>
+        {results}
+        {message}
       </div>
     );
   }
