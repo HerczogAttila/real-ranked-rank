@@ -49,7 +49,7 @@ class App extends ReactQueryParams {
           <span>League: UNRANKED</span>
         </div>;
         if (this.props.data.account.league) {
-          const league = this.props.data.account.league.find(s => s.queueType === 'RANKED_SOLO_5x5');
+          const league = this.props.data.account.league.find(s => s.queueType === 'RANKED_SOLO_5x5' || s.queueType === 'RANKED_FLEX_SR');
           if (league) {
             personalData = <div className='league-data-container'>
               <span>Név: {this.props.data.account.summoner.name}</span>
