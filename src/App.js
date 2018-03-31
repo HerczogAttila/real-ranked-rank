@@ -111,13 +111,21 @@ class App extends ReactQueryParams {
       </div>;
     }
 
-    if (!this.props.isLoading && !this.props.data) {
+    if (!this.props.isLoading && !this.props.data && !this.props.error) {
       appClass += ' search';
     }
 
     let spinner = null;
     if (this.props.isLoading) {
       spinner = <div className="loader"></div>;
+    }
+
+    let error = null;
+    if (this.props.error) {
+      error = <div className='error-container'>
+        <span>Megszakadt a kapcsolat a szerverrel!</span>
+        <span>Kérlek próbálkozz később!</span>
+      </div>;
     }
 
     return (
@@ -130,6 +138,7 @@ class App extends ReactQueryParams {
         {spinner}
         {results}
         {message}
+        {error}
       </div>
     );
   }

@@ -112,3 +112,9 @@ h1 {
     transform: rotate(360deg);
   }
 }
+
+.error-container {
+  margin-top: 1rem;
+  align-self: center;
+  color: red;
+}
