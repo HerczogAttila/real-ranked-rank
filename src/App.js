@@ -93,7 +93,7 @@ class App extends ReactQueryParams {
       let profileIcon = null;
       if (this.props.data.account && this.props.data.account.summoner) {
         profileIcon = <div className='profile-icon-container'>
-          <img className='profile-icon' alt='' src={'http://ddragon.leagueoflegends.com/cdn/8.4.1/img/profileicon/' + this.props.data.account.summoner.profileIconId + '.png'} />
+          <img className='profile-icon' alt='' src={'https://ddragon.leagueoflegends.com/cdn/8.4.1/img/profileicon/' + this.props.data.account.summoner.profileIconId + '.png'} />
         </div>;
       }
 
