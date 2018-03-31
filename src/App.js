@@ -1,15 +1,14 @@
 import React from 'react';
 import ReactQueryParams from 'react-query-params';
+import { connect } from 'react-redux';
+import * as actions from './store/rank';
 
-import axios from './axios';
 import './App.css';
 
 class App extends ReactQueryParams {
   state = {
     name: this.queryParams.name ? this.queryParams.name : '',
-    data: null,
-    range: 11,
-    cheat: false
+    range: 11
   }
 
   componentDidMount() {
@@ -19,25 +18,7 @@ class App extends ReactQueryParams {
   }
 
   searchHandler = () => {
-    const name = this.state.name.toLowerCase();
-    const url = '/data?summonerName=' + name;
-    axios.get(url)
-      .then(response => {
-        const data = response.data;
-        let cheat = false;
-        if (data.challengerleagues && data.challengerleagues.entries) {
-          data.challengerleagues.entries = data.challengerleagues.entries.sort((a, b) => b.leaguePoints - a.leaguePoints);
-          const maxLeaguePoints = Math.max.apply(null, data.challengerleagues.entries.map(entry => entry.leaguePoints));
-          if (data.account.league) {
-            const league = data.account.league.find(s => s.queueType === 'RANKED_SOLO_5x5');
-            if (league && !data.challengerleagues.entries.find(item => item.playerOrTeamName === data.account.summoner.name)) {
-              cheat = true;
-              data.challengerleagues.entries.unshift({ playerOrTeamId: data.account.summoner.id, playerOrTeamName: data.account.summoner.name, leaguePoints: maxLeaguePoints * 2, wins: league.wins, losses: league.losses });
-            }
-          }
-        }
-        this.setState({ data, cheat });
-      }).catch(error => console.log(error));
+    this.props.onSearch(this.state.name);
   };
 
   nameChangedHandler = (event) => {
@@ -54,25 +35,25 @@ class App extends ReactQueryParams {
     let appClass = 'App';
     let results = null;
     let message = null;
-    if (this.state.data) {
+    if (this.props.data) {
       let personalData = null;
       let challengerleaguesData = null;
-      if (this.state.data.challengerleagues && this.state.data.challengerleagues.entries) {
-        const summoner = this.state.data.challengerleagues.entries.find(item => item.playerOrTeamName === this.state.data.account.summoner.name);
-        const index = this.state.data.challengerleagues.entries.indexOf(summoner);
+      if (this.props.data.challengerleagues && this.props.data.challengerleagues.entries) {
+        const summoner = this.props.data.challengerleagues.entries.find(item => item.playerOrTeamName === this.props.data.account.summoner.name);
+        const index = this.props.data.challengerleagues.entries.indexOf(summoner);
         const min = index >= 4 ? index - 5 : 0;
-        let entries = this.state.data.challengerleagues.entries.slice(min, min + this.state.range);
+        let entries = this.props.data.challengerleagues.entries.slice(min, min + this.state.range);
         personalData = <div className='league-data-container'>
-          <span>Name: {this.state.data.account.summoner.name}</span>
-          <span>Level: {this.state.data.account.summoner.summonerLevel}</span>
+          <span>Name: {this.props.data.account.summoner.name}</span>
+          <span>Level: {this.props.data.account.summoner.summonerLevel}</span>
           <span>League: UNRANKED</span>
         </div>;
-        if (this.state.data.account.league) {
-          const league = this.state.data.account.league.find(s => s.queueType === 'RANKED_SOLO_5x5');
+        if (this.props.data.account.league) {
+          const league = this.props.data.account.league.find(s => s.queueType === 'RANKED_SOLO_5x5');
           if (league) {
             personalData = <div className='league-data-container'>
-              <span>Név: {this.state.data.account.summoner.name}</span>
-              <span>Szint: {this.state.data.account.summoner.summonerLevel}</span>
+              <span>Név: {this.props.data.account.summoner.name}</span>
+              <span>Szint: {this.props.data.account.summoner.summonerLevel}</span>
               <span>Liga: {league.tier} {league.rank} ({league.leagueName})</span>
               <span>Pont: {league.leaguePoints}</span>
               <span>Győzelmek: {league.wins}</span>
@@ -80,7 +61,7 @@ class App extends ReactQueryParams {
             </div>;
 
             const entriesData = entries.map((entry, index) => (
-              <tr key={entry.playerOrTeamId} className={entry.playerOrTeamName === this.state.data.account.summoner.name ? 'summoner' : ''}>
+              <tr key={entry.playerOrTeamId} className={entry.playerOrTeamName === this.props.data.account.summoner.name ? 'summoner' : ''}>
                 <td>{index + min + 1}</td>
                 <td className='summoner-name'>{entry.playerOrTeamName}</td>
                 <td>{entry.leaguePoints}</td>
@@ -89,7 +70,7 @@ class App extends ReactQueryParams {
               </tr>
             ));
             challengerleaguesData = <div>
-              <span>Valós liga: {this.state.data.challengerleagues.tier}</span>
+              <span>Valós liga: {this.props.data.challengerleagues.tier}</span>
               <table>
                 <thead>
                   <tr>
@@ -110,16 +91,16 @@ class App extends ReactQueryParams {
       }
 
       let profileIcon = null;
-      if (this.state.data.account && this.state.data.account.summoner) {
+      if (this.props.data.account && this.props.data.account.summoner) {
         profileIcon = <div className='profile-icon-container'>
-          <img className='profile-icon' alt='' src={'http://ddragon.leagueoflegends.com/cdn/8.4.1/img/profileicon/' + this.state.data.account.summoner.profileIconId + '.png'} />
+          <img className='profile-icon' alt='' src={'http://ddragon.leagueoflegends.com/cdn/8.4.1/img/profileicon/' + this.props.data.account.summoner.profileIconId + '.png'} />
         </div>;
       }
 
-      if (this.state.cheat && challengerleaguesData) {
+      if (this.props.cheat && challengerleaguesData) {
         message = <div className='message-container'>
           <span>Remélem elégedett vagy a valós helyezéseddel!</span>
-          <span>Ne felejtsd el megnézni a dátumot!</span>
+          <span className='hidden'>Ne felejtsd el megnézni a dátumot!</span>
         </div>;
       }
 
@@ -128,8 +109,15 @@ class App extends ReactQueryParams {
         {personalData}
         {challengerleaguesData}
       </div>;
-    } else {
+    }
+
+    if (!this.props.isLoading && !this.props.data) {
       appClass += ' search';
+    }
+
+    let spinner = null;
+    if (this.props.isLoading) {
+      spinner = <div className="loader"></div>;
     }
 
     return (
@@ -139,6 +127,7 @@ class App extends ReactQueryParams {
           <input placeholder="Idéző név" type="text" onKeyUp={this.inputSearchHandler} value={this.state.name} onChange={this.nameChangedHandler} />
           <button className="search-button" onClick={this.searchHandler}>Keresés</button>
         </div>
+        {spinner}
         {results}
         {message}
       </div>
@@ -146,4 +135,18 @@ class App extends ReactQueryParams {
   }
 }
 
-export default App;
+const mapPropsToDispatch = state => {
+  return {
+    isLoading: state.rank.isLoading,
+    error: state.rank.error,
+    data: state.rank.data
+  };
+};
+
+const mapDispatchToProps = dispatch => {
+  return {
+    onSearch: (name) => dispatch(actions.startGetData(name))
+  };
+};
+
+export default connect(mapPropsToDispatch, mapDispatchToProps)(App);
