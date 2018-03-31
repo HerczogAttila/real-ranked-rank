@@ -14,7 +14,7 @@ export function* getDataSaga(action) {
       data.challengerleagues.entries = data.challengerleagues.entries.sort((a, b) => b.leaguePoints - a.leaguePoints);
       const maxLeaguePoints = Math.max.apply(null, data.challengerleagues.entries.map(entry => entry.leaguePoints));
       if (data.account.league) {
-        const league = data.account.league.find(s => s.queueType === 'RANKED_SOLO_5x5');
+        const league = data.account.league.find(s => s.queueType === 'RANKED_SOLO_5x5' || s.queueType === 'RANKED_FLEX_SR');
         if (league && !data.challengerleagues.entries.find(item => item.playerOrTeamName === data.account.summoner.name)) {
           cheat = true;
           data.challengerleagues.entries.unshift({ playerOrTeamId: data.account.summoner.id, playerOrTeamName: data.account.summoner.name, leaguePoints: maxLeaguePoints * 2, wins: league.wins, losses: league.losses });
