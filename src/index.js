@@ -16,8 +16,7 @@ const rootReducer = combineReducers({
   rank: rankReducer
 });
 
-//const composeEnhancers = window.__REDUX_DEVTOOLS_EXTENSION_COMPOSE__ || compose;
-const composeEnhancers = process.env.NODE_ENV === 'development' ? window.__REDUX_DEVTOOLS_EXTENSION_COMPOSE__ : null || compose;
+const composeEnhancers = compose;
 
 const store = createStore(rootReducer, composeEnhancers(applyMiddleware(thunk, sagaMiddleware)));
 
