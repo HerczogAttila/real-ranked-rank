@@ -2,8 +2,10 @@
   "name": "real-ranked-rank",
   "version": "0.1.0",
   "private": true,
+  "homepage": "https://herczogattila.github.io/real-ranked-rank/",
   "dependencies": {
     "axios": "^0.18.0",
+    "gh-pages": "^1.1.0",
     "react": "^16.2.0",
     "react-dom": "^16.2.0",
     "react-query-params": "^1.0.7",
