@@ -6,7 +6,7 @@ import * as actions from './rank';
 export function* getDataSaga(action) {
   try {
     const url = '/data?summonerName=' + action.name;
-    const response = yield axios.get(url)
+    const response = yield axios.get(url);
 
     const data = response.data;
     let cheat = false;
@@ -24,7 +24,6 @@ export function* getDataSaga(action) {
 
     yield put(actions.successGetData(data, cheat));
   } catch (error) {
-    console.log(error);
     yield put(actions.failGetData(error));
   }
 }

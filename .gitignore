@@ -22,4 +22,4 @@ yarn-error.log*
 
 /.vs
 /functions/
-/backend
+/backend/node_modules
